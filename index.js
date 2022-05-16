@@ -1,15 +1,34 @@
 const { ApolloServer } = require('apollo-server');
 const gql = require('graphql-tag');
+const mongoose = require('mongoose');
+
+
+const Post = require('./models/User')
+const {MONGODB} = require('./config');
+
+
 
 const typeDefs = gql`
+    type Post{
+        id: ID!
+        body: String!
+        username: String!
+        createdAt:  String!
+    }
     type Query {
-        sayHi: String! 
+        getPosts: [Post]
     }
 `
 
 const resolvers = {
     Query: {
-        sayHi: () => 'Hello Wolrd!'
+        async getPosts(){
+            try {
+                const posts = await Post.find()
+            } catch (error) {
+                throw new Error(error);
+            }
+        }
     }
 }
 
@@ -18,6 +37,11 @@ const server = new ApolloServer({
     resolvers
 });
 
-server.listen({ port: 5000}).then((res) => {
-    console.log(`server running at ${res.url}`);
-});
+mongoose.connect(MONGODB, {useNewUrlParser: true}).then(
+    () => {
+        console.log('Db connection succesful')
+        return server.listen({ port: 5000}).then((res) => {
+            console.log(`server running at ${res.url}`);
+        });
+    }
+)
